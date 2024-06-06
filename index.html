@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="js/web3.min.js"></script>
+</head>
+<body>
+    <h2>libraryOwner is: <em id="libraryOwner"></em></h2>
+    <h2>current user is: <em id="user"></em></h2>
+
+    <h2>ALL books:<em id="showBooks"></em></h2>
+    <br/>
+
+    <h3>Show the books you borrow: <em id="borrowList"></em></h3>
+    <br/>
+
+    <h3>Add books:</h3>
+    <input type="book" id="title" placeholder="Book Title">
+    <input type="book" id="author" placeholder="Book Author">
+    <input type="book" id="inventory" placeholder="Book Inventory">
+    <input type="button" id="ADD" value="ADD">
+    <br/>
+
+
+    <h3>Buy books (only library owner):</h3>
+    <input type="book" id="b_title" placeholder="Book Title">
+    <input type="book" id="b_author" placeholder="Book Author">
+    <input type="book" id="b_inventory" placeholder="Book Inventory">
+    <input type="book" id="b_cost" placeholder="Book Cost">
+    <input type="button" id="BUY" value="BUY">
+    <br/>
+
+    <h3>Donate:</h3>
+    <input type="book" id="donate" placeholder="Donate Amount">
+    <input type="button" id="send" value="Donate">
+    <br/>
+
+    <h3>Borrow books (Borrow duration must be between 10 seconds and 30 days && Deposit amount must bigger than 50 wei):</h3>
+    <input type="deposit" id="deposit" placeholder="Deposit">
+    <input type="book" id="bookId" placeholder="Book ID">
+    <input type="book" id="duration" placeholder="Borrow Duration">
+    <input type="button" id="borrow" value="Borrow">
+    <br/>
+
+    <h3>Return book:</h3>
+    <input type="book" id="returnID" placeholder="Book ID">
+    <input type="button" id="return" value="Return">
+
+    <script>
+        var web3 = new Web3(window.ethereum)
+        window.ethereum.request({ method: 'eth_requestAccounts' }).catch(error => {
+             // User denied account access
+             console.log(error)
+        });
+        
+        var Contract;
+
+        
+        var abi = [
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_title",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_author",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_inventory",
+				"type": "uint256"
+			}
+		],
+		"name": "addBook",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_bookId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_borrowDuration",
+				"type": "uint256"
+			}
+		],
+		"name": "borrowBook",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_title",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_author",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_inventory",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_cost",
+				"type": "uint256"
+			}
+		],
+		"name": "buyNewBook",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "donate",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_bookId",
+				"type": "uint256"
+			}
+		],
+		"name": "returnBook",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "books",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "title",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "author",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "inventory",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "isAvailable",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "borrowedBooks",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "borrowTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "returnTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "depositAmount",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getAllborrownum",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_title",
+				"type": "string"
+			}
+		],
+		"name": "getBookId",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_bookId",
+				"type": "uint256"
+			}
+		],
+		"name": "getBorrowInfo",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "borrowTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "returnTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "depositAmount",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "libraryOwner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "members",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "numBooks",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "showAllBorrow",
+		"outputs": [
+			{
+				"internalType": "string[]",
+				"name": "",
+				"type": "string[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "showBooks",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "string",
+						"name": "title",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "author",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "inventory",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "isAvailable",
+						"type": "bool"
+					}
+				],
+				"internalType": "struct LibrarySystem.Book[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]
+        var address = '0xD6fDc2eCCB0468c9d45D22fB48E8e7d6d1c44BB7';  // (需要改) contract address
+        
+        async function init(){
+            Contract = await new web3.eth.Contract(abi,address);
+            var accounts = await web3.eth.getAccounts();
+            Contract.methods.libraryOwner().call()
+            .then(function(data){
+                document.getElementById('libraryOwner').textContent = data;
+                document.getElementById('user').textContent = accounts[0];
+            })
+        }
+
+        async function showBooks(){
+            Contract = await new web3.eth.Contract(abi,address);
+            var books = await Contract.methods.showBooks().call();
+            books = books.map((book, index) => ({
+                index: index,
+                title: book[0],
+                author: book[1],
+                inventory: book[2],
+                isAvailable: book[3]
+            }));
+
+            var booksList = document.getElementById('showBooks');
+            booksList.innerHTML = ''; // 清空列表
+
+            books.forEach(book => {
+                var bookItem = document.createElement('li');
+                bookItem.textContent = JSON.stringify(book, null, 2);
+                booksList.appendChild(bookItem);
+            });
+        }
+
+        async function showBorrow(){
+            console.log('showBorrow');
+            Contract = await new web3.eth.Contract(abi,address);
+            var accounts = await web3.eth.getAccounts();
+            var userAddress = accounts[0]; 
+            console.log(userAddress);
+
+            // Using .call({ from: userAddress }) when invoking a view function from your smart contract ensures that the function 
+            // call is made from a specific Ethereum address. 
+            // This is particularly useful when the 
+            // function's behavior depends on the msg.sender context, 
+            // as is the case with your showAllBorrow function, which retrieves data based on the caller's address.
+            var borrowList = await Contract.methods.showAllBorrow().call({ from: userAddress });
+            console.log(borrowList);
+
+
+            var borrowListElement = document.getElementById('borrowList');
+            borrowListElement.innerHTML = ''; // 清空列表
+
+            var books = await Contract.methods.showBooks().call();
+            books = books.map((book, index) => ({
+                bookId: index,
+                title: book[0],
+                author: book[1],
+            }));
+
+            for (let i = 0; i < books.length; i++) {
+                var borrowItem = document.createElement('li');
+
+                let titleToFind = books[i].title;
+
+                let foundBook = borrowList.includes(titleToFind);
+                console.log(foundBook);
+                if (!foundBook) {
+                    console.log('Book not found:', titleToFind);
+                    continue;
+                }
+
+                var borrows = await Contract.methods.borrowedBooks(userAddress,i).call();
+                console.log("*******");
+                console.log(borrows);
+
+                borrowItem.textContent = `Title: ${books[i].title}, ID: ${i}, borrowTime: ${borrows.borrowTime}, returnTime: ${borrows.returnTime}, depositAmount: ${borrows.depositAmount}`;
+                borrowListElement.appendChild(borrowItem);
+            }
+
+        }
+
+        init(); 
+        showBooks();
+        showBorrow();
+
+        document.getElementById('ADD').addEventListener('click',addBook);
+        async function addBook(){
+            var accounts = await web3.eth.getAccounts();
+            var title = document.getElementById('title').value;
+            var author = document.getElementById('author').value;
+            var inventory = document.getElementById('inventory').value;
+            Contract.methods.addBook(title,author,inventory)
+            .send({from:accounts[0]})
+            .then(function(data){
+                console.log(data);
+                location.reload();
+            })
+        }
+
+        document.getElementById('BUY').addEventListener('click',buyNewBook);
+        async function buyNewBook(){
+            var accounts = await web3.eth.getAccounts();
+            var owner = await Contract.methods.libraryOwner().call();
+            var balance = await web3.eth.getBalance(Contract.options.address);
+
+            if(accounts[0] != owner){
+                alert('You are not the owner');
+				return;
+            }
+
+            var title = document.getElementById('b_title').value;
+            var author = document.getElementById('b_author').value;
+            var inventory = document.getElementById('b_inventory').value;
+            var cost = document.getElementById('b_cost').value;
+
+            if(cost > balance){
+                alert('Not enough balance' + balance);
+                return;
+            }
+
+            Contract.methods.buyNewBook(title,author,inventory,cost)
+            .send({from:accounts[0]})
+            .then(function(data){
+                console.log(data);
+                location.reload();
+            })
+        }
+        
+        document.getElementById('send').addEventListener('click',donate);
+        async function donate(){
+            var accounts = await web3.eth.getAccounts();
+            var donate = document.getElementById('donate').value;
+            Contract.methods.donate()
+            .send({from:accounts[0],value:donate})
+            .then(function(data){
+                console.log(data);
+                location.reload();
+            })
+        }
+
+        document.getElementById('borrow').addEventListener('click',borrowBook);
+        async function borrowBook(){
+            var accounts = await web3.eth.getAccounts();
+            var deposit = document.getElementById('deposit').value;
+            var bookId = document.getElementById('bookId').value;
+            var duration = document.getElementById('duration').value;
+
+            if(deposit < 50){
+                alert('Deposit amount must bigger than 50 wei');
+                return;
+            }
+            if(duration < 10 || duration > 2592000){
+                alert('Borrow duration must be between 10 seconds and 30 days');
+                return;
+            }
+
+            Contract.methods.borrowBook(bookId,duration)
+            .send({from:accounts[0],value:deposit})
+            .then(function(data){
+                console.log(data);
+                location.reload();
+            })
+        }
+    
+        document.getElementById('return').addEventListener('click',returnBook);
+        async function returnBook(){
+            var accounts = await web3.eth.getAccounts();
+            var returnID = document.getElementById('returnID').value;
+            Contract.methods.returnBook(returnID)
+            .send({from:accounts[0]})
+            .then(function(data){
+                console.log(data);
+                location.reload();
+            })
+        }
+    </script>
+</body>
+</html>
