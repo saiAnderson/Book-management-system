@@ -17,6 +17,9 @@
     <h3>Show the books you borrow: <em id="borrowList"></em></h3>
     <br/>
 
+	<h3>Show the all buy book Proposals: <em id="showAllProposals"></em></h3>
+    <br/>
+
     <h3>Add books:</h3>
     <input type="book" id="title" placeholder="Book Title">
     <input type="book" id="author" placeholder="Book Author">
@@ -25,21 +28,21 @@
     <br/>
 
 
-    <h3>Buy books (only library owner):</h3>
+    <!-- <h3>Buy books (only library owner):</h3>
     <input type="book" id="b_title" placeholder="Book Title">
     <input type="book" id="b_author" placeholder="Book Author">
     <input type="book" id="b_inventory" placeholder="Book Inventory">
     <input type="book" id="b_cost" placeholder="Book Cost">
     <input type="button" id="BUY" value="BUY">
-    <br/>
+    <br/> -->
 
-    <h3>Donate:</h3>
-    <input type="book" id="donate" placeholder="Donate Amount">
+    <h3>Donate (min 11 ETH):</h3>
+    <input type="book" id="donate" placeholder="Donate Amount(ETH)">
     <input type="button" id="send" value="Donate">
     <br/>
 
-    <h3>Borrow books (Borrow duration must be between 10 seconds and 30 days && Deposit amount must bigger than 50 wei):</h3>
-    <input type="deposit" id="deposit" placeholder="Deposit">
+    <h3>Borrow books (Borrow duration must be between 10 seconds and 30 days && Deposit amount must bigger than 1 ETH):</h3>
+    <input type="deposit" id="deposit" placeholder="Deposit(ETH)">
     <input type="book" id="bookId" placeholder="Book ID">
     <input type="book" id="duration" placeholder="Borrow Duration">
     <input type="button" id="borrow" value="Borrow">
@@ -48,6 +51,23 @@
     <h3>Return book:</h3>
     <input type="book" id="returnID" placeholder="Book ID">
     <input type="button" id="return" value="Return">
+
+	<h3>Propose to buy New Book:</h3>
+	<input type="book" id="p_title" placeholder="Book Title">
+	<input type="book" id="p_author" placeholder="Book Author">
+	<input type="book" id="p_inventory" placeholder="Book Inventory">
+	<input type="book" id="p_cost" placeholder="Book Cost">
+	<input type="button" id="propose" value="Propose">
+	<br/>
+
+	<h3>Vote on proposal</h3>
+	<input type="book" id="voteID" placeholder="Proposal ID">
+	<input type="button" id="vote" value="Vote">
+	<br/>
+
+	<h3>Execute proposal(only owner)</h3>
+	<input type="book" id="executeID" placeholder="Proposal ID">
+	<input type="button" id="execute" value="Execute">
 
     <script>
         var web3 = new Web3(window.ethereum)
@@ -60,6 +80,11 @@
 
         
         var abi = [
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
 	{
 		"inputs": [
 			{
@@ -82,77 +107,6 @@
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_bookId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_borrowDuration",
-				"type": "uint256"
-			}
-		],
-		"name": "borrowBook",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "_title",
-				"type": "string"
-			},
-			{
-				"internalType": "string",
-				"name": "_author",
-				"type": "string"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_inventory",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_cost",
-				"type": "uint256"
-			}
-		],
-		"name": "buyNewBook",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "donate",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_bookId",
-				"type": "uint256"
-			}
-		],
-		"name": "returnBook",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
 	},
 	{
 		"inputs": [
@@ -191,6 +145,24 @@
 	{
 		"inputs": [
 			{
+				"internalType": "uint256",
+				"name": "_bookId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_borrowDuration",
+				"type": "uint256"
+			}
+		],
+		"name": "borrowBook",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "address",
 				"name": "",
 				"type": "address"
@@ -217,6 +189,81 @@
 				"internalType": "uint256",
 				"name": "depositAmount",
 				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "donate",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_proposalId",
+				"type": "uint256"
+			}
+		],
+		"name": "executeProposal",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getAllProposals",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "proposalId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "title",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "author",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "inventory",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "cost",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "proposer",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "voteCount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "executed",
+						"type": "bool"
+					}
+				],
+				"internalType": "struct LibrarySystem.Proposal[]",
+				"name": "",
+				"type": "tuple[]"
 			}
 		],
 		"stateMutability": "view",
@@ -330,6 +377,114 @@
 	},
 	{
 		"inputs": [],
+		"name": "proposalCount",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "proposals",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "proposalId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "string",
+				"name": "title",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "author",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "inventory",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "cost",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "proposer",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "voteCount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "executed",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_title",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_author",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_inventory",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_cost",
+				"type": "uint256"
+			}
+		],
+		"name": "proposeNewBook",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_bookId",
+				"type": "uint256"
+			}
+		],
+		"name": "returnBook",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
 		"name": "showAllBorrow",
 		"outputs": [
 			{
@@ -375,10 +530,61 @@
 		],
 		"stateMutability": "view",
 		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "totalMembers",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_proposalId",
+				"type": "uint256"
+			}
+		],
+		"name": "voteOnProposal",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "votes",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
 	}
 ]
-        var address = '0xD6fDc2eCCB0468c9d45D22fB48E8e7d6d1c44BB7';  // (需要改) contract address
+		var address = '0xC08e8D0F5065e99c886255099FbaABDb2735a342';  // (需要改) contract address
         
+
         async function init(){
             Contract = await new web3.eth.Contract(abi,address);
             var accounts = await web3.eth.getAccounts();
@@ -453,15 +659,33 @@
                 console.log(borrows);
 
                 // neet to change the display format
-                borrowItem.textContent = `Title: ${books[i].title}, ID: ${i}, borrowTime: ${borrows.borrowTime}, returnTime: ${borrows.returnTime}, depositAmount: ${borrows.depositAmount}`;
+				let F_borrowTime = new Date(borrows.borrowTime * 1000).toLocaleString();
+				let F_returnTime = new Date(borrows.returnTime * 1000).toLocaleString();
+
+                borrowItem.textContent = `Title: ${books[i].title}, ID: ${i}, borrowTime: ${F_borrowTime}, returnTime: ${F_returnTime}, depositAmount: ${borrows.depositAmount/10e17} ETH`;
                 borrowListElement.appendChild(borrowItem);
             }
-
         }
+
+		async function getAllProposals(){
+			Contract = await new web3.eth.Contract(abi,address);
+			var proposals = await Contract.methods.getAllProposals().call();
+
+			var proposalsElement = document.getElementById('showAllProposals'); // 假設你有一個 id 為 'proposals' 的元素
+			proposalsElement.innerHTML = ''; // 清空元素
+
+			for (let proposal of proposals) {
+				var proposalItem = document.createElement('li');
+				if(proposal.executed == true) continue;
+				proposalItem.textContent = `proposalId: ${proposal.proposalId} Title: ${proposal.title}, Author: ${proposal.author}, Inventory: ${proposal.inventory}, Cost: ${proposal.cost} ETH, Proposer: ${proposal.proposer}, Vote Count: ${proposal.voteCount}, Executed: ${proposal.executed}`;
+				proposalsElement.appendChild(proposalItem);
+			}
+		}
 
         init(); 
         showBooks();
         showBorrow();
+		getAllProposals();
 
         document.getElementById('ADD').addEventListener('click',addBook);
         async function addBook(){
@@ -476,40 +700,15 @@
                 location.reload();
             })
         }
-
-        document.getElementById('BUY').addEventListener('click',buyNewBook);
-        async function buyNewBook(){
-            var accounts = await web3.eth.getAccounts();
-            var owner = await Contract.methods.libraryOwner().call();
-            var balance = await web3.eth.getBalance(Contract.options.address);
-
-            if(accounts[0] != owner){
-                alert('You are not the owner');
-				return;
-            }
-
-            var title = document.getElementById('b_title').value;
-            var author = document.getElementById('b_author').value;
-            var inventory = document.getElementById('b_inventory').value;
-            var cost = document.getElementById('b_cost').value;
-
-            if(cost > balance){
-                alert('Not enough balance' + balance);
-                return;
-            }
-
-            Contract.methods.buyNewBook(title,author,inventory,cost)
-            .send({from:accounts[0]})
-            .then(function(data){
-                console.log(data);
-                location.reload();
-            })
-        }
         
         document.getElementById('send').addEventListener('click',donate);
         async function donate(){
             var accounts = await web3.eth.getAccounts();
-            var donate = document.getElementById('donate').value;
+            var donate = document.getElementById('donate').value * 10e17;
+			if(donate < 1e18){
+				alert('Donate amount must bigger than 1 ether');
+				return;
+			}
             Contract.methods.donate()
             .send({from:accounts[0],value:donate})
             .then(function(data){
@@ -521,12 +720,28 @@
         document.getElementById('borrow').addEventListener('click',borrowBook);
         async function borrowBook(){
             var accounts = await web3.eth.getAccounts();
-            var deposit = document.getElementById('deposit').value;
+			var Ismember = await Contract.methods.members(accounts[0]).call();
+			if(!Ismember){
+				alert('You are not a member');
+				return;
+			}
+
+			var userAddress = accounts[0];
+
+            var deposit = document.getElementById('deposit').value * 10e17;
             var bookId = document.getElementById('bookId').value;
             var duration = document.getElementById('duration').value;
 
-            if(deposit < 50){
-                alert('Deposit amount must bigger than 50 wei');
+			var borrowList = await Contract.methods.showAllBorrow().call({ from: userAddress });
+			var books = await Contract.methods.showBooks().call();
+
+			if(borrowList.includes(books[bookId].title)){
+				alert('You have already borrowed this book');
+				return;
+			}
+
+            if(deposit < 1e18){
+                alert('Deposit amount must bigger than 1 ether');
                 return;
             }
             if(duration < 10 || duration > 2592000){
@@ -553,6 +768,93 @@
                 location.reload();
             })
         }
-    </script>
+		
+		document.getElementById('propose').addEventListener('click',proposeNewBook);
+		async function proposeNewBook(){
+			var accounts = await web3.eth.getAccounts();
+			if(accounts[0] == await Contract.methods.libraryOwner().call()){
+				alert('You are owner cant propose new book');
+				return;
+			}
+			var title = document.getElementById('p_title').value;
+			var author = document.getElementById('p_author').value;
+			var inventory = document.getElementById('p_inventory').value;
+			var cost = document.getElementById('p_cost').value;
+
+			Contract.methods.proposeNewBook(title,author,inventory,cost)
+			.send({from:accounts[0]})
+			.then(function(data){
+				console.log(data);
+				location.reload();
+			})
+		}
+		
+		document.getElementById('vote').addEventListener('click',voteOnProposal);
+		async function voteOnProposal(){
+			var accounts = await web3.eth.getAccounts();
+			var voteID = document.getElementById('voteID').value;
+
+			var proposals = await Contract.methods.getAllProposals().call();
+			if(proposals.hasOwnProperty(voteID) == false){
+				alert('Proposal does not exist');
+				return;
+			}
+
+			var votes = await Contract.methods.votes(voteID,accounts[0]).call();
+			if(votes){
+				alert('You have already voted');
+				return;
+			}
+
+			Contract.methods.voteOnProposal(voteID)
+			.send({from:accounts[0]})
+			.then(function(data){
+				console.log(data);
+				location.reload();
+			})
+		}
+	
+		document.getElementById('execute').addEventListener('click',executeProposal);
+		async function executeProposal(){
+			var accounts = await web3.eth.getAccounts();
+			var owner = await Contract.methods.libraryOwner().call();
+			if(accounts[0] != owner){
+				alert('You are not the owner');
+				return;
+			}
+
+			var executeID = document.getElementById('executeID').value;
+			var proposals = await Contract.methods.getAllProposals().call();
+			if(proposals.hasOwnProperty(executeID) == false){
+				alert('Proposal does not exist');
+				return;
+			}
+
+			if(proposals[executeID].executed){
+				alert('Proposal has already been executed');
+				return;
+			}
+
+			var totalMembers = await Contract.methods.totalMembers().call();
+			if(proposals[executeID].voteCount < totalMembers/2){
+				alert('Proposal has not enough votes');
+				return;
+			}
+
+			var balance = await web3.eth.getBalance(Contract.options.address);
+			if(balance < proposals[executeID].cost){
+				alert('Not enough balance');
+				return;
+			}
+
+			Contract.methods.executeProposal(executeID)
+			.send({from:accounts[0]})
+			.then(function(data){
+				console.log(data);
+				location.reload();
+			})
+		}
+
+	</script>
 </body>
 </html>
