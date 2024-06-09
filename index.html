@@ -582,7 +582,8 @@
 		"type": "function"
 	}
 ]
-		var address = '0xC08e8D0F5065e99c886255099FbaABDb2735a342';  // (需要改) contract address
+		
+		var address = '0x330543f13487560f6203e13912Da657456ACd53b';  // (需要改) contract address
         
 
         async function init(){
@@ -705,8 +706,9 @@
         async function donate(){
             var accounts = await web3.eth.getAccounts();
             var donate = document.getElementById('donate').value * 10e17;
-			if(donate < 1e18){
-				alert('Donate amount must bigger than 1 ether');
+			console.log(donate);
+			if(donate <= 1e19){
+				alert('Donate amount must bigger than 10 ether');
 				return;
 			}
             Contract.methods.donate()
@@ -725,9 +727,7 @@
 				alert('You are not a member');
 				return;
 			}
-
 			var userAddress = accounts[0];
-
             var deposit = document.getElementById('deposit').value * 10e17;
             var bookId = document.getElementById('bookId').value;
             var duration = document.getElementById('duration').value;
@@ -735,8 +735,18 @@
 			var borrowList = await Contract.methods.showAllBorrow().call({ from: userAddress });
 			var books = await Contract.methods.showBooks().call();
 
+			if(bookId < 0 || bookId >= books.length){
+				alert('Book ID is invalid');
+				return;
+			}
+
 			if(borrowList.includes(books[bookId].title)){
 				alert('You have already borrowed this book');
+				return;
+			}
+
+			if(books[bookId].isAvailable == false){
+				alert('This book is not available');
 				return;
 			}
 
